@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConnectiZen Complaint Portal</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+    
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+    }
+    
+    .voice-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      border-left: 4px solid #2196F3;
+    }
+    
+    .voice-instructions {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #2196F3;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #2196F3;
+      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    }
+    
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    
+    button {
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s;
+      margin: 5px;
+    }
+    
+    button:hover {
+      background: #1976D2;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+    }
+    
+    .voice-button {
+      background: #4CAF50;
+      font-size: 18px;
+    }
+    
+    .voice-button:hover {
+      background: #388E3C;
+    }
+    
+    .status-message {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4CAF50;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: none;
+      max-width: 300px;
+    }
+    
+    .listening-indicator {
+      display: none;
+      text-align: center;
+      color: #2196F3;
+      font-weight: 600;
+      margin: 10px 0;
+    }
+    
+    .listening-indicator.active {
+      display: block;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+    
+    /* Recording controls styling */
+    #recordingControls button {
+      margin: 5px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+    }
+    
+    #recordingControls button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    #recordingControls button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* Analysis display styling */
+    #voiceAnalysis, #sentimentIndicator {
+      margin: 15px 0;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    
+    #voiceAnalysis h4 {
+      margin: 0 0 10px 0;
+      color: #2196F3;
+    }
+    
+    #voiceAnalysis p {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎤 ConnectiZen Complaint Portal</h1>
+    
+    <div class="voice-section">
+      <h2>🎤 Voice Complaint Submission</h2>
+      <div class="voice-instructions">
+        <strong>How to submit a voice complaint:</strong>
+        <ul>
+          <li>Click the "🎤 Start Voice Complaint" button below</li>
+          <li>Speak your complaint clearly when prompted</li>
+          <li>The system will automatically categorize and parse your complaint</li>
+          <li>Review the parsed information and submit</li>
+        </ul>
+      </div>
+      
+      <button id="voiceButton" class="voice-button" onclick="startVoiceComplaint()">
+        🎤 Start Voice Complaint
+      </button>
+      
+      <div id="listeningIndicator" class="listening-indicator">
+        🎤 Listening... Speak your complaint now
+      </div>
+    </div>
+    
+    <div class="form-section">
+      <h2>📝 Manual Complaint Submission</h2>
+      
+      <div class="form-group">
+        <label for="summary">Summary:</label>
+        <input id="summary" placeholder="Brief summary of your complaint" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="fullText">Full Description:</label>
+        <textarea id="fullText" placeholder="Detailed description of your complaint" required></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="category">Category:</label>
+        <select id="category">
+          <option value="">Select a category</option>
+          <option value="Technical">Technical Issues</option>
+          <option value="Customer Service">Customer Service</option>
+          <option value="Billing">Billing & Payment</option>
+          <option value="Product">Product Quality</option>
+          <option value="User Interface">User Interface</option>
+          <option value="General">General</option>
+        </select>
+      </div>
+      
+      <button onclick="submitComplaint()">Submit Complaint</button>
+    </div>
+  </div>
+
+  <div id="status" class="status-message"></div>
+
+  <script src="script.js"></script>
+
+  <!-- ✅ Omnidim Voice Chat Agent -->
+  <script
+    id="omnidimension-web-widget"
+    async
+    src="https://backend.omnidim.io/web_widget.js?secret_key=1eb03deb8bcb130127c84c5dacbb3542">
+  </script>
+</body>
+</html>

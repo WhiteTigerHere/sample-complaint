@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recording Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        
+        .recording-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #2196F3;
+        }
+        
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .recording {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+        
+        audio {
+            width: 100%;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Voice Recording Test</h1>
+        
+        <div class="recording-section">
+            <h3>Recording Controls</h3>
+            <button id="startBtn" onclick="startRecording()">🔴 Start Recording</button>
+            <button id="pauseBtn" onclick="pauseRecording()" disabled>⏸️ Pause</button>
+            <button id="resumeBtn" onclick="resumeRecording()" disabled>▶️ Resume</button>
+            <button id="stopBtn" onclick="stopRecording()" disabled>⏹️ Stop</button>
+            <button id="playBtn" onclick="playRecording()" disabled>🔊 Play</button>
+            <button id="submitBtn" onclick="submitRecording()" disabled>📤 Submit</button>
+        </div>
+        
+        <div class="status" id="status">
+            Ready to record. Click "Start Recording" to begin.
+        </div>
+        
+        <div class="recording" id="recordingInfo" style="display: none;">
+            <h4>Recording Information:</h4>
+            <p id="recordingDetails"></p>
+            <audio id="audioPlayer" controls style="display: none;"></audio>
+        </div>
+    </div>
+
+    <script>
+        let mediaRecorder = null;
+        let recordingChunks = [];
+        let isRecording = false;
+        let currentRecording = null;
+        
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+        
+        function updateButtons() {
+            const startBtn = document.getElementById('startBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const resumeBtn = document.getElementById('resumeBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const playBtn = document.getElementById('playBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (isRecording) {
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                resumeBtn.disabled = true;
+                stopBtn.disabled = false;
+                playBtn.disabled = true;
+                submitBtn.disabled = true;
+            } else {
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+                resumeBtn.disabled = true;
+                stopBtn.disabled = true;
+                if (currentRecording) {
+                    playBtn.disabled = false;
+                    submitBtn.disabled = false;
+                } else {
+                    playBtn.disabled = true;
+                    submitBtn.disabled = true;
+                }
+            }
+        }
+        
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                recordingChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    recordingChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstart = () => {
+                    isRecording = true;
+                    updateStatus('Recording started. Speak your complaint.');
+                    updateButtons();
+                };
+                
+                mediaRecorder.onstop = () => {
+                    isRecording = false;
+                    updateButtons();
+                    const audioBlob = new Blob(recordingChunks, { type: 'audio/wav' });
+                    currentRecording = URL.createObjectURL(audioBlob);
+                    
+                    // Display recording info
+                    const recordingInfo = document.getElementById('recordingInfo');
+                    const recordingDetails = document.getElementById('recordingDetails');
+                    const audioPlayer = document.getElementById('audioPlayer');
+                    
+                    recordingInfo.style.display = 'block';
+                    recordingDetails.textContent = `Recording completed. Duration: ${Math.round(recordingChunks.length * 0.1)}s, Size: ${Math.round(audioBlob.size / 1024)}KB`;
+                    audioPlayer.src = currentRecording;
+                    audioPlayer.style.display = 'block';
+                    
+                    updateStatus('Recording completed. You can play, pause, or submit.');
+                };
+                
+                mediaRecorder.start();
+                
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                updateStatus('Error accessing microphone. Please check permissions.');
+            }
+        }
+        
+        function pauseRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.pause();
+                updateStatus('Recording paused.');
+            }
+        }
+        
+        function resumeRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.resume();
+                updateStatus('Recording resumed.');
+            }
+        }
+        
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+        }
+        
+        function playRecording() {
+            if (currentRecording) {
+                const audio = new Audio(currentRecording);
+                audio.play();
+                updateStatus('Playing recording...');
+            }
+        }
+        
+        function submitRecording() {
+            if (currentRecording) {
+                updateStatus('Processing recording for text extraction...');
+                
+                // Simulate processing
+                setTimeout(() => {
+                    updateStatus('Recording processed successfully! Text extracted and ready for submission.');
+                }, 2000);
+            } else {
+                updateStatus('No recording available to submit.');
+            }
+        }
+        
+        // Initialize
+        updateButtons();
+    </script>
+</body>
+</html> 
